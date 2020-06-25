@@ -37,6 +37,12 @@ func AssetsSlice(kind reflect.Kind, msg string) {
 	}
 }
 
+func AssetsMap(kind reflect.Kind, msg string) {
+	if kind != reflect.Map {
+		AssetsError(errors.New(msg))
+	}
+}
+
 func StringJoin(ss ...string) string {
 	buffer := new(strings.Builder)
 	for _, s := range ss {
@@ -60,19 +66,43 @@ func ArrayToInterface(data interface{}) []interface{} {
 	return dst
 }
 
+func MapToInterface(data interface{}) map[interface{}]interface{} {
+	v := reflect.ValueOf(data)
+
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+
+	keys := v.MapKeys()
+	dst := make(map[interface{}]interface{}, len(keys))
+
+	for _, kV := range keys {
+		dst[kV.Interface()] = v.MapIndex(kV).Interface()
+	}
+
+	return dst
+}
+
+func MapMap(data interface{}, cb func(interface{}) interface{}) interface{} {
+	dataTransform := MapToInterface(data)
+	dst := make(map[interface{}]interface{}, len(dataTransform))
+	for index, d := range dataTransform {
+		dst[index] = cb(d)
+	}
+	return dst
+}
+
 func ArrayMap(data interface{}, cb func(interface{}) interface{}) interface{} {
-	dataTransfrom := ArrayToInterface(data)
-	dst := make([]interface{}, len(dataTransfrom))
-	for index, d := range dataTransfrom {
+	dataTransform := ArrayToInterface(data)
+	dst := make([]interface{}, len(dataTransform))
+	for index, d := range dataTransform {
 		dst[index] = cb(d)
 	}
 	return dst
 }
 
 func ArrayFilter(data interface{}, cb func(interface{}) bool) interface{} {
-	dataTransfrom := ArrayToInterface(data)
-	dst := make([]interface{}, 0, len(dataTransfrom))
-	for _, d := range dataTransfrom {
+	dataTransform := ArrayToInterface(data)
+	dst := make([]interface{}, 0, len(dataTransform))
+	for _, d := range dataTransform {
 		if cb(d) {
 			dst = append(dst, d)
 		}
@@ -81,8 +111,8 @@ func ArrayFilter(data interface{}, cb func(interface{}) bool) interface{} {
 }
 
 func ArrayReduce(data interface{}, cb func(float64, interface{}) float64, start float64) float64 {
-	dataTransfrom := ArrayToInterface(data)
-	for _, d := range dataTransfrom {
+	dataTransform := ArrayToInterface(data)
+	for _, d := range dataTransform {
 		start = cb(start, d)
 	}
 	return start
@@ -91,11 +121,31 @@ func ArrayReduce(data interface{}, cb func(float64, interface{}) float64, start 
 type ArrayKeyByS map[interface{}][]interface{}
 
 func ArrayKeyBy(data interface{}, key string) ArrayKeyByS {
-	dataTransfrom := ArrayToInterface(data)
-	dst := make(ArrayKeyByS, len(dataTransfrom))
-	for _, d := range dataTransfrom {
+	dataTransform := ArrayToInterface(data)
+	dst := make(ArrayKeyByS, len(dataTransform))
+	for _, d := range dataTransform {
 		k, _ := Get(d, key)
 		dst[k] = append(dst[k], d)
+	}
+	return dst
+}
+
+func ArrayMakeKey(data interface{}, key string) map[interface{}]interface{} {
+	dataTransform := ArrayToInterface(data)
+	dst := make(map[interface{}]interface{}, len(dataTransform))
+	for _, d := range dataTransform {
+		k, _ := Get(d, key)
+		dst[k] = d
+	}
+	return dst
+}
+
+func ArrayKeyByFunc(data interface{}, key string, cb func(interface{}, interface{}) interface{}) map[interface{}]interface{} {
+	dataTransform := ArrayToInterface(data)
+	dst := make(map[interface{}]interface{}, len(dataTransform))
+	for _, d := range dataTransform {
+		k, _ := Get(d, key)
+		dst[k] = cb(dst[k], d)
 	}
 	return dst
 }
@@ -172,12 +222,12 @@ func InArray(data interface{}, find interface{}) bool {
 type ArrayPickS []map[string]interface{}
 
 func ArrayPick(data interface{}, keys []string) ArrayPickS {
-	dataTransfrom := ArrayToInterface(data)
-	dst := make(ArrayPickS, 0, len(dataTransfrom))
-	dstT := GetArrayType(dataTransfrom).Kind()
+	dataTransform := ArrayToInterface(data)
+	dst := make(ArrayPickS, 0, len(dataTransform))
+	dstT := GetArrayType(dataTransform).Kind()
 	fieldNum := len(keys)
 
-	for _, d := range dataTransfrom {
+	for _, d := range dataTransform {
 		tmp := make(map[string]interface{}, fieldNum)
 		v := reflect.ValueOf(d)
 		for _, k := range keys {

@@ -28,6 +28,26 @@ func main() {
 		}
 	}
 
+	// 计算年龄为x的人总年龄(没啥用的例子)
+	// 1. array分组后 将分组结果单另计算
+	fmt.Println(lib.MapMap(m, func(d interface{}) interface{} {
+		return lib.ArrayReduce(d.([]interface{}), func(count float64, d interface{}) float64 {
+			return count + float64(d.(t).Age)
+		}, 0)
+	}))
+
+	// 2. array 分组且直接计算结果
+	fmt.Println(lib.ArrayKeyByFunc(test, "Age", func(old interface{}, d interface{}) interface{} {
+		// 代表第一项
+		if old == nil {
+			return d.(t).Age
+		}
+
+		return old.(int) + d.(t).Age
+	}))
+
+	fmt.Println(lib.ArrayMakeKey(test, "Age"))
+
 	fmt.Println(lib.ArrayReduce(lib.ArrayFilter(lib.ArrayMap([]int{1, 2, 3, 4, 5}, func(d interface{}) interface{} {
 		return d.(int) + 1
 	}), func(d interface{}) bool {
