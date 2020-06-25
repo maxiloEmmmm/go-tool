@@ -41,4 +41,12 @@ func main() {
 
 	fmt.Println(lib.Has(test, "4.Age1"))
 	fmt.Println(lib.Has(test, "4.Age"))
+
+	value, exist := lib.Get(test, "4.Age")
+
+	if exist {
+		fmt.Println(value)
+	} else {
+		fmt.Println("4.Age不存在")
+	}
 }
