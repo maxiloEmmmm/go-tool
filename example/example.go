@@ -69,4 +69,6 @@ func main() {
 	} else {
 		fmt.Println("4.Age不存在")
 	}
+
+	fmt.Println(lib.AssetsReturn(false, "1", nil))
 }

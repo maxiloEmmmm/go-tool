@@ -1,7 +1,6 @@
 package go_tool
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
@@ -271,7 +270,7 @@ func Has(data interface{}, path string) bool {
 }
 
 func Get(data interface{}, path string) (interface{}, bool) {
-	paths := strings.Split(path, ".")
+	paths := strings.SplitN(path, ".", 2)
 	v := reflect.ValueOf(data)
 	kind := v.Kind()
 	k := paths[0]
@@ -303,7 +302,7 @@ func Get(data interface{}, path string) (interface{}, bool) {
 
 		if item.IsValid() {
 			if shouldNext {
-				return Get(item.Interface(), strings.Join(paths[1:], "."))
+				return Get(item.Interface(), paths[1])
 			}
 
 			return item.Interface(), true
@@ -313,7 +312,7 @@ func Get(data interface{}, path string) (interface{}, bool) {
 	}
 }
 
-func AssetsString(assets bool, s string, t string) string {
+func AssetsReturn(assets bool, s interface{}, t interface{}) interface{} {
 	if assets {
 		return s
 	} else {
@@ -324,7 +323,7 @@ func AssetsString(assets bool, s string, t string) string {
 func AssetsError(err error) {
 	if err != nil {
 		_, file, line, ok := runtime.Caller(1)
-		buffer := new(bytes.Buffer)
+		buffer := new(strings.Builder)
 		if ok {
 			buffer.WriteString("file: ")
 			buffer.WriteString(file)
