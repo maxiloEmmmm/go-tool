@@ -38,15 +38,20 @@ func main() {
 
 	// 2. array 分组且直接计算结果
 	fmt.Println(lib.ArrayKeyByFunc(test, "Age", func(old interface{}, d interface{}) interface{} {
+		tmp := d.(t)
 		// 代表第一项
 		if old == nil {
-			return d.(t).Age
+			return tmp.Age
 		}
 
-		return old.(int) + d.(t).Age
+		return old.(int) + tmp.Age
 	}))
 
 	fmt.Println(lib.ArrayMakeKey(test, "Age"))
+
+	fmt.Println(lib.ArrayMakeKeyFunc(test, "Age", func(d interface{}) interface{} {
+		return d.(t).Name
+	}))
 
 	fmt.Println(lib.ArrayReduce(lib.ArrayFilter(lib.ArrayMap([]int{1, 2, 3, 4, 5}, func(d interface{}) interface{} {
 		return d.(int) + 1

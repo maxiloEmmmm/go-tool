@@ -293,8 +293,7 @@ func Get(data interface{}, path string) (interface{}, bool) {
 		switch kind {
 		case reflect.Slice:
 			{
-				len := v.Len()
-				if index, err := strconv.Atoi(k); err != nil || index > len-1 || index < 0 {
+				if index, err := strconv.Atoi(k); err != nil || index > v.Len()-1 || index < 0 {
 					return nil, false
 				} else {
 					item = v.Index(index)
