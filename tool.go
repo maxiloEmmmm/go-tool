@@ -139,6 +139,16 @@ func ArrayMakeKey(data interface{}, key string) map[interface{}]interface{} {
 	return dst
 }
 
+func ArrayMakeKeyFunc(data interface{}, key string, cb func(d interface{}) interface{}) map[interface{}]interface{} {
+	dataTransform := ArrayToInterface(data)
+	dst := make(map[interface{}]interface{}, len(dataTransform))
+	for _, d := range dataTransform {
+		k, _ := Get(d, key)
+		dst[k] = cb(d)
+	}
+	return dst
+}
+
 func ArrayKeyByFunc(data interface{}, key string, cb func(interface{}, interface{}) interface{}) map[interface{}]interface{} {
 	dataTransform := ArrayToInterface(data)
 	dst := make(map[interface{}]interface{}, len(dataTransform))
