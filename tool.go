@@ -24,6 +24,16 @@ func Uint8sToBytes(src []uint8) []byte {
 	return dst
 }
 
+func TryInterfacePtr(data interface{}) reflect.Value {
+	v := reflect.ValueOf(data)
+
+	if v.Kind() == reflect.Ptr {
+		return v.Elem()
+	} else {
+		return v
+	}
+}
+
 func AssetsMapOrS(kind reflect.Kind, msg string) {
 	if kind != reflect.Map && kind != reflect.Struct {
 		AssetsError(errors.New(msg))
@@ -42,6 +52,12 @@ func AssetsMap(kind reflect.Kind, msg string) {
 	}
 }
 
+func AssetsPtr(kind reflect.Kind, msg string) {
+	if kind != reflect.Ptr {
+		AssetsError(errors.New(msg))
+	}
+}
+
 func StringJoin(ss ...string) string {
 	buffer := new(strings.Builder)
 	for _, s := range ss {
@@ -51,7 +67,7 @@ func StringJoin(ss ...string) string {
 }
 
 func ArrayToInterface(data interface{}) []interface{} {
-	v := reflect.ValueOf(data)
+	v := TryInterfacePtr(data)
 
 	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
 
@@ -66,7 +82,7 @@ func ArrayToInterface(data interface{}) []interface{} {
 }
 
 func MapToInterface(data interface{}) map[interface{}]interface{} {
-	v := reflect.ValueOf(data)
+	v := TryInterfacePtr(data)
 
 	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
 
@@ -90,29 +106,39 @@ func MapMap(data interface{}, cb func(interface{}) interface{}) interface{} {
 }
 
 func ArrayMap(data interface{}, cb func(interface{}) interface{}) interface{} {
-	dataTransform := ArrayToInterface(data)
-	dst := make([]interface{}, len(dataTransform))
-	for index, d := range dataTransform {
-		dst[index] = cb(d)
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	dst := make([]interface{}, vl)
+	for i := 0; i < vl; i++ {
+		dst[i] = cb(v.Index(i).Interface())
 	}
 	return dst
 }
 
 func ArrayFilter(data interface{}, cb func(interface{}) bool) interface{} {
-	dataTransform := ArrayToInterface(data)
-	dst := make([]interface{}, 0, len(dataTransform))
-	for _, d := range dataTransform {
-		if cb(d) {
-			dst = append(dst, d)
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	dst := make([]interface{}, 0, vl)
+	for i := 0; i < vl; i++ {
+		tmp := v.Index(i).Interface()
+		if cb(tmp) {
+			dst = append(dst, tmp)
 		}
 	}
 	return dst
 }
 
 func ArrayReduce(data interface{}, cb func(float64, interface{}) float64, start float64) float64 {
-	dataTransform := ArrayToInterface(data)
-	for _, d := range dataTransform {
-		start = cb(start, d)
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	for i := 0; i < vl; i++ {
+		start = cb(start, v.Index(i).Interface())
 	}
 	return start
 }
@@ -120,47 +146,68 @@ func ArrayReduce(data interface{}, cb func(float64, interface{}) float64, start 
 type ArrayKeyByS map[interface{}][]interface{}
 
 func ArrayKeyBy(data interface{}, key string) ArrayKeyByS {
-	dataTransform := ArrayToInterface(data)
-	dst := make(ArrayKeyByS, len(dataTransform))
-	for _, d := range dataTransform {
-		k, _ := Get(d, key)
-		dst[k] = append(dst[k], d)
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	dst := make(ArrayKeyByS, vl)
+	for i := 0; i < vl; i++ {
+		tmp := v.Index(i).Interface()
+		// 相信宝贝你不会存在不存在的情况 - -
+		k, _ := Get(tmp, key)
+		dst[k] = append(dst[k], tmp)
 	}
 	return dst
 }
 
 func ArrayKeyByFunc(data interface{}, key string, cb func(interface{}, interface{}) interface{}) map[interface{}]interface{} {
-	dataTransform := ArrayToInterface(data)
-	dst := make(map[interface{}]interface{}, len(dataTransform))
-	for _, d := range dataTransform {
-		k, _ := Get(d, key)
-		dst[k] = cb(dst[k], d)
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	dst := make(map[interface{}]interface{}, vl)
+
+	for i := 0; i < vl; i++ {
+		tmp := v.Index(i).Interface()
+		// 相信宝贝你不会存在不存在的情况 - -
+		k, _ := Get(tmp, key)
+		dst[k] = cb(dst[k], tmp)
 	}
 	return dst
 }
 
 func ArrayMakeKey(data interface{}, key string) map[interface{}]interface{} {
-	dataTransform := ArrayToInterface(data)
-	dst := make(map[interface{}]interface{}, len(dataTransform))
-	for _, d := range dataTransform {
-		k, _ := Get(d, key)
-		dst[k] = d
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	dst := make(map[interface{}]interface{}, vl)
+	for i := 0; i < vl; i++ {
+		tmp := v.Index(i).Interface()
+		// 相信宝贝你不会存在不存在的情况 - -
+		k, _ := Get(tmp, key)
+		dst[k] = tmp
 	}
 	return dst
 }
 
 func ArrayMakeKeyFunc(data interface{}, key string, cb func(d interface{}) interface{}) map[interface{}]interface{} {
-	dataTransform := ArrayToInterface(data)
-	dst := make(map[interface{}]interface{}, len(dataTransform))
-	for _, d := range dataTransform {
-		k, _ := Get(d, key)
-		dst[k] = cb(d)
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	dst := make(map[interface{}]interface{}, vl)
+	for i := 0; i < vl; i++ {
+		tmp := v.Index(i).Interface()
+		// 相信宝贝你不会存在不存在的情况 - -
+		k, _ := Get(tmp, key)
+		dst[k] = cb(tmp)
 	}
 	return dst
 }
 
 func ArrayFirst(data interface{}) interface{} {
-	v := reflect.ValueOf(data)
+	v := TryInterfacePtr(data)
 
 	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
 
@@ -214,7 +261,7 @@ func GetTypeFieldBySet(data interface{}, keys []string) []string {
 }
 
 func InArray(data interface{}, find interface{}) bool {
-	v := reflect.ValueOf(data)
+	v := TryInterfacePtr(data)
 	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
 
 	dNum := v.Len()
@@ -231,13 +278,17 @@ func InArray(data interface{}, find interface{}) bool {
 type ArrayPickS []map[string]interface{}
 
 func ArrayPick(data interface{}, keys []string) ArrayPickS {
-	dataTransform := ArrayToInterface(data)
-	dst := make(ArrayPickS, 0, len(dataTransform))
-	dstT := GetArrayType(dataTransform).Kind()
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	dNum := v.Len()
+	dst := make(ArrayPickS, dNum)
+	dstT := GetArrayType(data).Kind()
 	fieldNum := len(keys)
 
-	for _, d := range dataTransform {
+	for i := 0; i < dNum; i++ {
 		tmp := make(map[string]interface{}, fieldNum)
+		d := v.Index(i).Interface()
 		v := reflect.ValueOf(d)
 		for _, k := range keys {
 			switch dstT {
@@ -260,7 +311,7 @@ func ArrayPick(data interface{}, keys []string) ArrayPickS {
 				}
 			}
 		}
-		dst = append(dst, tmp)
+		dst[i] = tmp
 	}
 	return dst
 }
@@ -281,7 +332,7 @@ func Has(data interface{}, path string) bool {
 
 func Get(data interface{}, path string) (interface{}, bool) {
 	paths := strings.SplitN(path, ".", 2)
-	v := reflect.ValueOf(data)
+	v := TryInterfacePtr(data)
 	kind := v.Kind()
 	k := paths[0]
 	shouldNext := len(paths) > 1
