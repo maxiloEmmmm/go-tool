@@ -66,21 +66,6 @@ func StringJoin(ss ...string) string {
 	return buffer.String()
 }
 
-func ArrayToInterface(data interface{}) []interface{} {
-	v := TryInterfacePtr(data)
-
-	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
-
-	vl := v.Len()
-	dst := make([]interface{}, vl)
-
-	for i := 0; i < vl; i++ {
-		dst[i] = v.Index(i).Interface()
-	}
-
-	return dst
-}
-
 func MapToInterface(data interface{}) map[interface{}]interface{} {
 	v := TryInterfacePtr(data)
 
