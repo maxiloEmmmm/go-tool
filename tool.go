@@ -70,7 +70,6 @@ func MapToInterface(data interface{}) map[interface{}]interface{} {
 	v := TryInterfacePtr(data)
 
 	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
-
 	keys := v.MapKeys()
 	dst := make(map[interface{}]interface{}, len(keys))
 
@@ -82,12 +81,109 @@ func MapToInterface(data interface{}) map[interface{}]interface{} {
 }
 
 func MapMap(data interface{}, cb func(interface{}) interface{}) interface{} {
-	dataTransform := MapToInterface(data)
-	dst := make(map[interface{}]interface{}, len(dataTransform))
-	for index, d := range dataTransform {
-		dst[index] = cb(d)
+	v := TryInterfacePtr(data)
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+	keys := v.MapKeys()
+	dst := make(map[interface{}]interface{}, v.Len())
+	for _, key := range keys {
+		dst[key.Type().Name()] = cb(v.MapIndex(key).Interface())
 	}
 	return dst
+}
+
+func MapKeyFilter(data interface{}, cb func(interface{}) bool) interface{} {
+	v := TryInterfacePtr(data)
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+	keys := v.MapKeys()
+	dst := make(map[interface{}]interface{}, v.Len())
+	for _, key := range keys {
+		k := key.Interface()
+		if cb(k) {
+			dst[k] = v.MapIndex(key).Interface()
+		}
+	}
+	return dst
+}
+
+func MapKeyFilterToArray(data interface{}, cb func(interface{}) bool) interface{} {
+	v := TryInterfacePtr(data)
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+	keys := v.MapKeys()
+	dst := make([]interface{}, 0, v.Len())
+	for _, key := range keys {
+		k := key.Interface()
+		if cb(k) {
+			dst = append(dst, v.MapIndex(key).Interface())
+		}
+	}
+	return dst
+}
+
+func MapValueFilter(data interface{}, cb func(interface{}) bool) interface{} {
+	v := TryInterfacePtr(data)
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+	keys := v.MapKeys()
+	dst := make(map[interface{}]interface{}, v.Len())
+	for _, key := range keys {
+		value := v.MapIndex(key).Interface()
+		if cb(value) {
+			dst[key.Interface()] = value
+		}
+	}
+	return dst
+}
+
+func MapValueFilterToArray(data interface{}, cb func(interface{}) bool) interface{} {
+	v := TryInterfacePtr(data)
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+	keys := v.MapKeys()
+	dst := make([]interface{}, 0, v.Len())
+	for _, key := range keys {
+		value := v.MapIndex(key).Interface()
+		if cb(value) {
+			dst = append(dst, value)
+		}
+	}
+	return dst
+}
+
+func MapKeys(data interface{}, cb func(interface{}) interface{}) interface{} {
+	v := TryInterfacePtr(data)
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+	keys := v.MapKeys()
+	return ArrayMap(&keys, func(d interface{}) interface{} {
+		k := d.(reflect.Value).Interface()
+		if cb != nil {
+			return cb(k)
+		}
+		return d.(reflect.Value).Interface()
+	})
+}
+
+func MapValues(data interface{}, cb func(interface{}) interface{}) interface{} {
+	v := TryInterfacePtr(data)
+	AssetsMap(v.Kind(), "map转换接口错误, 非map接口")
+	keys := v.MapKeys()
+	return ArrayMap(&keys, func(d interface{}) interface{} {
+		value := v.MapIndex(d.(reflect.Value)).Interface()
+		if cb != nil {
+			return cb(value)
+		}
+		return value
+	})
+}
+
+func AssetMapSet(do bool, m interface{}, key interface{}, value interface{}) {
+	if do {
+		v := reflect.ValueOf(m)
+
+		if v.Kind() != reflect.Ptr {
+			AssetsSlice(v.Kind(), "非指针, 无法set map")
+		} else {
+			obj := v.Elem()
+			obj.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(value))
+		}
+	}
 }
 
 func ArrayMap(data interface{}, cb func(interface{}) interface{}) interface{} {

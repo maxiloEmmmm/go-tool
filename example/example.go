@@ -81,4 +81,40 @@ func main() {
 	}
 
 	fmt.Println(lib.AssetsReturn(false, "1", nil))
+
+	testMap := map[string]int{
+		"a": 1, "b": 2, "c": 3,
+	}
+
+	fmt.Println(lib.MapKeyFilter(&testMap, func(d interface{}) bool {
+		return lib.InArray([]string{"a", "b"}, d.(string))
+	}))
+
+	fmt.Println(lib.MapKeyFilterToArray(&testMap, func(d interface{}) bool {
+		return lib.InArray([]string{"a", "b"}, d.(string))
+	}))
+
+	fmt.Println(lib.MapValueFilter(&testMap, func(d interface{}) bool {
+		return d.(int) >= 2
+	}))
+
+	fmt.Println(lib.MapValueFilterToArray(&testMap, func(d interface{}) bool {
+		return d.(int) >= 2
+	}))
+
+	fmt.Println(lib.MapKeys(&testMap, nil))
+
+	fmt.Println(lib.MapKeys(&testMap, func(d interface{}) interface{} {
+		return lib.StringJoin(d.(string), "-haha")
+	}))
+
+	fmt.Println(lib.MapValues(&testMap, func(d interface{}) interface{} {
+		return d.(int) + 1
+	}))
+
+	testMapSet := map[string]string{}
+
+	lib.AssetMapSet(true, &testMapSet, "a", "哈")
+	lib.AssetMapSet(false, &testMapSet, "b", "嘻")
+	fmt.Println(testMapSet)
 }
