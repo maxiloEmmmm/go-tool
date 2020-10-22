@@ -224,14 +224,12 @@ func ArrayReduce(data interface{}, cb func(float64, interface{}) float64, start 
 	return start
 }
 
-type ArrayKeyByS map[interface{}][]interface{}
-
-func ArrayKeyBy(data interface{}, key string) ArrayKeyByS {
+func ArrayKeyBy(data interface{}, key string) map[interface{}][]interface{} {
 	v := TryInterfacePtr(data)
 	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
 
 	vl := v.Len()
-	dst := make(ArrayKeyByS, vl)
+	dst := make(map[interface{}][]interface{}, vl)
 	for i := 0; i < vl; i++ {
 		tmp := v.Index(i).Interface()
 		// 相信宝贝你不会存在不存在的情况 - -
@@ -241,12 +239,12 @@ func ArrayKeyBy(data interface{}, key string) ArrayKeyByS {
 	return dst
 }
 
-func ArrayKeyFuncBy(data interface{}, key string, cb func(interface{}) interface{}) ArrayKeyByS {
+func ArrayKeyFuncBy(data interface{}, key string, cb func(interface{}) interface{}) map[interface{}][]interface{} {
 	v := TryInterfacePtr(data)
 	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
 
 	vl := v.Len()
-	dst := make(ArrayKeyByS, vl)
+	dst := make(map[interface{}][]interface{}, vl)
 	for i := 0; i < vl; i++ {
 		tmp := v.Index(i).Interface()
 		// 相信宝贝你不会存在不存在的情况 - -
