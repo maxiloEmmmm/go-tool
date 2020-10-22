@@ -241,6 +241,22 @@ func ArrayKeyBy(data interface{}, key string) ArrayKeyByS {
 	return dst
 }
 
+func ArrayKeyFuncBy(data interface{}, key string, cb func(interface{}) interface{}) ArrayKeyByS {
+	v := TryInterfacePtr(data)
+	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")
+
+	vl := v.Len()
+	dst := make(ArrayKeyByS, vl)
+	for i := 0; i < vl; i++ {
+		tmp := v.Index(i).Interface()
+		// 相信宝贝你不会存在不存在的情况 - -
+		k, _ := Get(tmp, key)
+		kt := cb(k)
+		dst[kt] = append(dst[kt], tmp)
+	}
+	return dst
+}
+
 func ArrayKeyByFunc(data interface{}, key string, cb func(interface{}, interface{}) interface{}) map[interface{}]interface{} {
 	v := TryInterfacePtr(data)
 	AssetsSlice(v.Kind(), "数组转换接口错误, 非数组接口")

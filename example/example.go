@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	lib "github.com/maxiloEmmmm/go-tool"
+	"strings"
 )
 
 func main() {
@@ -17,7 +18,12 @@ func main() {
 		{Name: "hxm2", Age: 12},
 		{Name: "hxm3", Age: 13},
 		{Name: "hxm4", Age: 15},
+		{Name: "gxm", Age: 12},
 	}
+
+	fmt.Println(lib.ArrayKeyFuncBy(&test, "Name", func(d interface{}) interface{} {
+		return lib.AssetsReturn(strings.HasPrefix(d.(string), "hx"), "hx", "gx")
+	}))
 
 	fmt.Println(lib.ArrayFirst(&test))
 	fmt.Println(lib.InArray([]string{"!", "#"}, "#"))
